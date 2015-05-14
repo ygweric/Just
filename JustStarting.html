@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Just: HTTP for Humans</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          
+          <h1 id="just-http-for-humans">Just: HTTP for Humans</h1>
+<p>This document is an introduction to the basics of donig HTTP via Just.
+Readers are assumed to understand of the HTTP protocal.</p>
+<p>Just’s API is heavily influenced by <a href="http://python-requests.org">python-requests</a>,
+a popular client-side HTTP library in the Python community.</p>
+<p>Here’s a simple POST request via Just:</p>
+
+          
+            <div class='highlight'><pre>
+<span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>)</pre></div>
+          
+        
+
+        
+      </div>
+
+      
+        
+        <p>A GET request with some URL query parameters is as simple as:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/get"</span>, params:[<span class="hljs-string">"page"</span>: <span class="hljs-number">3</span>])</pre></div>
+        
+      
+        
+        <p>Just supports these methods <em>DELETE/GET/HEAD/OPTIONS/PATCH/POST/PUT</em>
+The URL is the only required argument when making a request. Just strives
+for a minimum interface.</p>
+
+        
+      
+        
+        <h2 id="synchronous-v-asynchronous">Synchronous v. Asynchronous</h2>
+<p>When working with Swift, we tend to shun sychronous network requests because
+they block when invoked on the main thread, which would prevent our
+Cocoa/Cocoa Touch apps from smooth UI rendering. However, there’s nothing
+inherantly wrong with synchronous requests. In fact, synchronous code is often
+easier to understand and, therefore, a better paradigm to explore HTTP
+resources with. In REPL or playgrounds, you can see the result of
+synchronous results.</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">var</span> r = <span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/get"</span>, params:[<span class="hljs-string">"page"</span>: <span class="hljs-number">3</span>])
+<span class="hljs-comment">// … "r" becomes available here</span></pre></div>
+        
+      
+        
+        <p>However, Just doesn’t force you to choose. The same request can be made
+asynchronously like this</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/get"</span>, params:[<span class="hljs-string">"page"</span>: <span class="hljs-number">3</span>]) { (r) <span class="hljs-keyword">in</span>
+    <span class="hljs-comment">// the same "r" is available asynchronously here</span>
+}</pre></div>
+        
+      
+        
+        <p>That is, you can switch between the two paradigm by adding/removing a
+callback. When such callback is present, the result of the request becomes
+available asynchronously as an arugment to the callback. Otherwise,
+Just will return the very same result synchronously.</p>
+<p>The examples in the rest of this document will be synchronous. Keep in
+mind that all of them can easily be asynchronous.</p>
+
+        
+      
+        
+        <h2 id="http-result">HTTP Result</h2>
+<p>The result of a HTTP request is captured in a single object.
+Let’s take a look at <em>r</em> from the previous example.</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-comment">// is the request successful?</span>
+r.ok
+r.statusCode</pre></div>
+        
+      
+        
+        <p>Hopefully, that’s self explainatory. <strong>ok</strong> is <em>true</em> if a response is
+received and the <strong>statusCode</strong> is not <em>4xx</em> or <em>5xx</em>.</p>
+<p>Moving on:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-comment">// what did the server return?</span>
+r.headers       <span class="hljs-comment">// response headers</span>
+r.content       <span class="hljs-comment">// response body as NSData?</span>
+r.text          <span class="hljs-comment">// response body as text?</span>
+r.json          <span class="hljs-comment">// response body parsed by NSJSONSerielization</span>
+r.url           <span class="hljs-comment">// the URL, as NSURL</span>
+r.isRedirect    <span class="hljs-comment">// is this a redirect response</span></pre></div>
+        
+      
+        
+        <p>The <strong>headers</strong> property is a Swift-dictionary-like object:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">for</span> (k,v) <span class="hljs-keyword">in</span> r.headers {
+    <span class="hljs-built_in">println</span>(<span class="hljs-string">"<span class="hljs-subst">\(k)</span>:<span class="hljs-subst">\(v)</span>"</span>)
+}</pre></div>
+        
+      
+        
+        <p>It’s different from a normal dictionary in that its values can be accessed
+by case-insensitive keys:</p>
+
+        
+          <div class='highlight'><pre>
+r.headers[<span class="hljs-string">"Content-Length"</span>] == r.headers[<span class="hljs-string">"cOnTeNt-LeNgTh"</span>] <span class="hljs-comment">// true</span></pre></div>
+        
+      
+        
+        <p>The original request is preserved as a <em>NSURLRequest</em>:</p>
+
+        
+          <div class='highlight'><pre>
+r.request               <span class="hljs-comment">// NSURLRequest sent</span>
+r.request?.<span class="hljs-type">HTTPMethod</span>   <span class="hljs-comment">// GET</span></pre></div>
+        
+      
+        
+        <p>When things aren’t going so well:</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-keyword">let</span> erronous = <span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/does/not/exist"</span>) <span class="hljs-comment">// oops</span>
+erronous.ok         <span class="hljs-comment">// nope</span>
+erronous.reason     <span class="hljs-comment">// text description of the failure</span>
+erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if any</span></pre></div>
+        
+      
+        
+        <h2 id="more-complicated-requests">More Complicated Requests</h2>
+<p>To send form values, use the <strong>data</strong> parameter:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-comment">// body of this request will be firstName=Barry&amp;lastName=Allen</span>
+<span class="hljs-comment">// a Content-Type header will be added as application/x-form-www-encoded</span>
+<span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, data:[<span class="hljs-string">"firstName"</span>:<span class="hljs-string">"Barry"</span>,<span class="hljs-string">"lastName"</span>:<span class="hljs-string">"Allen"</span>])</pre></div>
+        
+      
+        
+        <p>JSON values are similar:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-comment">// body of this request will be in JSON</span>
+<span class="hljs-comment">// a Content-Type header will be added as application/json</span>
+<span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, json:[<span class="hljs-string">"firstName"</span>:<span class="hljs-string">"Barry"</span>,<span class="hljs-string">"lastName"</span>:<span class="hljs-string">"Allen"</span>])</pre></div>
+        
+      
+        
+        <p>By default, Just follows server’s redirect instrution. You can supply an
+<strong>allowRedirects</strong> argument to control this behavior.</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-comment">// redirects</span>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/redirect/2"</span>).isRedirect <span class="hljs-comment">// false</span>
+
+<span class="hljs-comment">// no redirects</span>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/redirect/2"</span>, allowRedirects:<span class="hljs-built_in">false</span>).isRedirect <span class="hljs-comment">// true</span></pre></div>
+        
+      
+        
+        <p>In addition, a permanent redirect can be detected this way:</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-comment">// permanent redirect</span>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/status/301"</span>, allowRedirects:<span class="hljs-built_in">false</span>).isPermanentRedirect <span class="hljs-comment">// true</span>
+
+<span class="hljs-comment">// non permanent redirect</span>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/status/302"</span>, allowRedirects:<span class="hljs-built_in">false</span>).isPermanentRedirect <span class="hljs-comment">// false</span></pre></div>
+        
+      
+        
+        <h2 id="files">Files</h2>
+<p>Uploading files is easy with Just:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">import</span> <span class="hljs-type">Foundation</span>
+<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> photoPath = <span class="hljs-type">NSBundle</span>.mainBundle().pathForResource(<span class="hljs-string">"elon"</span>, ofType:<span class="hljs-string">"jpg"</span>),
+    <span class="hljs-keyword">let</span> photoURL = <span class="hljs-type">NSURL</span>(fileURLWithPath: photoPath) {
+    <span class="hljs-keyword">let</span> uploadResult = <span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(photoURL, <span class="hljs-built_in">nil</span>)]) <span class="hljs-comment">// &lt;== that's it</span>
+    <span class="hljs-built_in">print</span>(uploadResult.text ?? <span class="hljs-string">""</span>)
+}</pre></div>
+        
+      
+        
+        <p>Here a file is specified with an NSURL. Alternatively, a file can be a NSData or just a string. Although in both cases, a filename is needed.</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> someData = <span class="hljs-string">"Marco"</span>.dataUsingEncoding(<span class="hljs-type">NSUTF8StringEncoding</span>) {
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> text = <span class="hljs-type">Just</span>.post(
+        <span class="hljs-string">"http://httpbin.org/post"</span>,
+        files:[
+            <span class="hljs-string">"a"</span>:.<span class="hljs-type">Data</span>(<span class="hljs-string">"marco.text"</span>, someData, <span class="hljs-built_in">nil</span>), <span class="hljs-comment">// file #1, an NSData</span>
+            <span class="hljs-string">"b"</span>:.<span class="hljs-type">Text</span>(<span class="hljs-string">"polo.txt"</span>, <span class="hljs-string">"Polo"</span>, <span class="hljs-built_in">nil</span>)      <span class="hljs-comment">// file #2, a String</span>
+        ]
+    ).text {
+        <span class="hljs-built_in">print</span>(text)
+    }
+}</pre></div>
+        
+      
+        
+        <p>Two files are being uploaded here.</p>
+<p>The <em>nil</em> part of the argument in both examples is an optional String that can be used to specify the MIMEType of the files.</p>
+<p><strong>data</strong> parameter can be used in conjuction with <strong>files</strong>. When that happens, though, the <em>Content-Type</em> of the request will be <em>multipart/form-data; …</em>.</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> photoPath = <span class="hljs-type">NSBundle</span>.mainBundle().pathForResource(<span class="hljs-string">"elon"</span>, ofType:<span class="hljs-string">"jpg"</span>),
+    <span class="hljs-keyword">let</span> photoURL = <span class="hljs-type">NSURL</span>(fileURLWithPath: photoPath) {
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> json = <span class="hljs-type">Just</span>.post(
+        <span class="hljs-string">"http://httpbin.org/post"</span>,
+        data:[<span class="hljs-string">"lastName"</span>:<span class="hljs-string">"Musk"</span>],
+        files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(photoURL, <span class="hljs-built_in">nil</span>)]
+    ).json <span class="hljs-keyword">as</span>? [<span class="hljs-type">String</span>:<span class="hljs-type">AnyObject</span>] {
+        <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"form"</span>] ?? [:])      <span class="hljs-comment">// lastName:Musk</span>
+        <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"files"</span>] ?? [:])     <span class="hljs-comment">// elon</span>
+    }
+}</pre></div>
+        
+      
+        
+        <h2 id="cookies">Cookies</h2>
+<p>If you expect the server to return some cookie, you can find them this way:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/cookies/set/name/elon"</span>, allowRedirects:<span class="hljs-built_in">false</span>).cookies[<span class="hljs-string">"name"</span>] <span class="hljs-comment">// returns an NSHTTPCookie</span></pre></div>
+        
+      
+        
+        <p>To send requests with cookies:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/cookies"</span>, cookies:[<span class="hljs-string">"test"</span>:<span class="hljs-string">"just"</span>]) <span class="hljs-comment">// ok</span></pre></div>
+        
+      
+        
+        <h2 id="authentication">Authentication</h2>
+<p>If a request is to be challenged by basic or digest authentication, use the <strong>auth</strong> parameter to provide a tuple for username and password</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/basic-auth/flash/allen"</span>, auth:(<span class="hljs-string">"flash"</span>, <span class="hljs-string">"allen"</span>)) <span class="hljs-comment">// ok</span></pre></div>
+        
+      
+        
+        <h2 id="timeout">Timeout</h2>
+<p>You can tell Just to stop waiting for a response after a given number of seconds with the timeout parameter:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-comment">// this request won't finish</span>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/delay/5"</span>, timeout:<span class="hljs-number">0.2</span>).reason</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>
