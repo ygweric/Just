@@ -287,6 +287,35 @@ erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if 
 <span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/delay/5"</span>, timeout:<span class="hljs-number">0.2</span>).reason</pre></div>
         
       
+        
+        <h2 id="upload-and-download-progress">Upload and Download Progress</h2>
+<p>When dealing with large files, you may be interested in knowing the progress
+of their uploading or downloading. You can do that by supplynig a call back
+to the parameter <strong>asyncProgressHandler</strong>.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-type">Just</span>.post(
+    <span class="hljs-string">"http://httpbin.org/post"</span>,
+    files:[<span class="hljs-string">"large file"</span>:.<span class="hljs-type">Text</span>(<span class="hljs-string">"or"</span>, <span class="hljs-string">"pretend this is a large file"</span>, <span class="hljs-built_in">nil</span>)],
+    asyncProgressHandler: {(p) <span class="hljs-keyword">in</span>
+        p.type <span class="hljs-comment">// either .Upload or .Download</span>
+        p.bytesProcessed
+        p.bytesExpectedToProcess
+        p.percent
+    }
+) { (r) <span class="hljs-keyword">in</span>
+    <span class="hljs-comment">// finished</span>
+}</pre></div>
+        
+      
+        
+        <p>The progress handler may be called during sending the request and receiving
+the response. You can tell them apart by checking the <strong>type</strong> property of the
+callback argument. In either cases, you can use <strong>bytesProcessed</strong>,
+<strong>bytesExpectedToProcess</strong> aned <strong>percent</strong> to check the actual progress.</p>
+
+        
+      
       <div class="fleur">h</div>
     </div>
   </div>
