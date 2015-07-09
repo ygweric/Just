@@ -15,13 +15,13 @@
         
           
           <h1 id="just-a-quick-start">Just: A Quick Start</h1>
-<p>This is an introduction to the basics of donig HTTP via
+<p>This is an introduction to the basics of doning HTTP via
 <a href="http://JustHTTP.net">Just</a>.
 It’s available both on the
 <a href="http://docs.justhttp.net/QuickStart.html">web</a>
 and as a
 <a href="https://raw.githubusercontent.com/JustHTTP/Just/master/Docs/QuickStart.zip">playground</a>.
-Readers are assumed to understand of the HTTP protocal.</p>
+Readers are assumed to be familiar with the basics of HTTP.</p>
 <h2 id="simple-requests">Simple Requests</h2>
 <p>Just’s API is heavily influenced by <a href="http://python-requests.org">python-requests</a>,
 HTTP for Humans in Python.</p>
@@ -68,8 +68,7 @@ they block when invoked on the main thread, which would prevent our
 Cocoa/Cocoa Touch apps from smooth UI rendering. However, there’s nothing
 inherantly wrong with synchronous requests. In fact, synchronous code is often
 easier to understand and, therefore, a better paradigm to explore HTTP
-resources with. In REPL or playgrounds, you can see the result of
-synchronous results.</p>
+resources with.</p>
 
         
           <div class='highlight'><pre>
@@ -93,6 +92,10 @@ asynchronously like this</p>
 callback. When such callback is present, the result of the request becomes
 available asynchronously as an arugment to the callback. Otherwise,
 Just will return the very same result synchronously.</p>
+<p><em>Note: asynchronous callbacks does not run on main thread, which is a
+behavior inherited from NSURLSession. Be sure to dispatch code
+properly with NSOperationQueue or GCD if you need to update UI in the
+callback.</em></p>
 <p>The examples in the rest of this document will be synchronous. Keep in
 mind that all of them can easily be asynchronous.</p>
 
@@ -132,7 +135,7 @@ r.isRedirect    <span class="hljs-comment">// is this a redirect response</span>
         
           <div class='highlight'><pre>
 <span class="hljs-keyword">for</span> (k,v) <span class="hljs-keyword">in</span> r.headers {
-    <span class="hljs-built_in">println</span>(<span class="hljs-string">"<span class="hljs-subst">\(k)</span>:<span class="hljs-subst">\(v)</span>"</span>)
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">"<span class="hljs-subst">\(k)</span>:<span class="hljs-subst">\(v)</span>"</span>)
 }</pre></div>
         
       
@@ -216,11 +219,12 @@ erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if 
         
           <div class='highlight'><pre>
 <span class="hljs-keyword">import</span> <span class="hljs-type">Foundation</span>
-<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> photoPath = <span class="hljs-type">NSBundle</span>.mainBundle().pathForResource(<span class="hljs-string">"elon"</span>, ofType:<span class="hljs-string">"jpg"</span>),
-    <span class="hljs-keyword">let</span> photoURL = <span class="hljs-type">NSURL</span>(fileURLWithPath: photoPath) {
-    <span class="hljs-keyword">let</span> uploadResult = <span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(photoURL, <span class="hljs-built_in">nil</span>)]) <span class="hljs-comment">// &lt;== that's it</span>
-    <span class="hljs-built_in">print</span>(uploadResult.text ?? <span class="hljs-string">""</span>)
-}</pre></div>
+
+
+
+<span class="hljs-keyword">let</span> elonPhotoURL = <span class="hljs-type">NSBundle</span>.mainBundle().<span class="hljs-type">URLForResource</span>(<span class="hljs-string">"elon"</span>, withExtension: <span class="hljs-string">"jpg"</span>)! <span class="hljs-comment">// assume the file exist</span>
+<span class="hljs-keyword">let</span> uploadResult = <span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(elonPhotoURL, <span class="hljs-built_in">nil</span>)]) <span class="hljs-comment">// &lt;== that's it</span>
+<span class="hljs-built_in">print</span>(uploadResult.text ?? <span class="hljs-string">""</span>)</pre></div>
         
       
         
@@ -228,16 +232,16 @@ erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if 
 
         
           <div class='highlight'><pre>
-<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> someData = <span class="hljs-string">"Marco"</span>.dataUsingEncoding(<span class="hljs-type">NSUTF8StringEncoding</span>) {
-    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> text = <span class="hljs-type">Just</span>.post(
-        <span class="hljs-string">"http://httpbin.org/post"</span>,
-        files:[
-            <span class="hljs-string">"a"</span>:.<span class="hljs-type">Data</span>(<span class="hljs-string">"marco.text"</span>, someData, <span class="hljs-built_in">nil</span>), <span class="hljs-comment">// file #1, an NSData</span>
-            <span class="hljs-string">"b"</span>:.<span class="hljs-type">Text</span>(<span class="hljs-string">"polo.txt"</span>, <span class="hljs-string">"Polo"</span>, <span class="hljs-built_in">nil</span>)      <span class="hljs-comment">// file #2, a String</span>
-        ]
-    ).text {
-        <span class="hljs-built_in">print</span>(text)
-    }
+<span class="hljs-keyword">let</span> someData = <span class="hljs-string">"Marco"</span>.dataUsingEncoding(<span class="hljs-type">NSUTF8StringEncoding</span>)! <span class="hljs-comment">// this shouldn't fail</span>
+
+<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> text = <span class="hljs-type">Just</span>.post(
+    <span class="hljs-string">"http://httpbin.org/post"</span>,
+    files:[
+        <span class="hljs-string">"a"</span>:.<span class="hljs-type">Data</span>(<span class="hljs-string">"marco.text"</span>, someData, <span class="hljs-built_in">nil</span>), <span class="hljs-comment">// file #1, an NSData</span>
+        <span class="hljs-string">"b"</span>:.<span class="hljs-type">Text</span>(<span class="hljs-string">"polo.txt"</span>, <span class="hljs-string">"Polo"</span>, <span class="hljs-built_in">nil</span>)      <span class="hljs-comment">// file #2, a String</span>
+    ]
+).text {
+    <span class="hljs-built_in">print</span>(text)
 }</pre></div>
         
       
@@ -248,16 +252,13 @@ erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if 
 
         
           <div class='highlight'><pre>
-<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> photoPath = <span class="hljs-type">NSBundle</span>.mainBundle().pathForResource(<span class="hljs-string">"elon"</span>, ofType:<span class="hljs-string">"jpg"</span>),
-    <span class="hljs-keyword">let</span> photoURL = <span class="hljs-type">NSURL</span>(fileURLWithPath: photoPath) {
-    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> json = <span class="hljs-type">Just</span>.post(
-        <span class="hljs-string">"http://httpbin.org/post"</span>,
-        data:[<span class="hljs-string">"lastName"</span>:<span class="hljs-string">"Musk"</span>],
-        files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(photoURL, <span class="hljs-built_in">nil</span>)]
-    ).json <span class="hljs-keyword">as</span>? [<span class="hljs-type">String</span>:<span class="hljs-type">AnyObject</span>] {
-        <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"form"</span>] ?? [:])      <span class="hljs-comment">// lastName:Musk</span>
-        <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"files"</span>] ?? [:])     <span class="hljs-comment">// elon</span>
-    }
+<span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> json = <span class="hljs-type">Just</span>.post(
+    <span class="hljs-string">"http://httpbin.org/post"</span>,
+    data:[<span class="hljs-string">"lastName"</span>:<span class="hljs-string">"Musk"</span>],
+    files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(elonPhotoURL, <span class="hljs-built_in">nil</span>)]
+).json <span class="hljs-keyword">as</span>? [<span class="hljs-type">String</span>:<span class="hljs-type">AnyObject</span>] {
+    <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"form"</span>] ?? [:])      <span class="hljs-comment">// lastName:Musk</span>
+    <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"files"</span>] ?? [:])     <span class="hljs-comment">// elon</span>
 }</pre></div>
         
       
