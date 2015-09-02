@@ -263,6 +263,32 @@ erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if 
         
       
         
+        <h2 id="link-headers">Link Headers</h2>
+<p>Many HTTP APIs feature Link headers. They make APIs more self describing
+and discoverable.</p>
+<p>Github uses these for pagination in their API, for example:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">let</span> gh = <span class="hljs-type">Just</span>.head(<span class="hljs-string">"https://api.github.com/users/dduan/repos?page=1&amp;per_page=5"</span>)
+gh.headers[<span class="hljs-string">"link"</span>] <span class="hljs-comment">// &lt;https://api.github.com/user/75067/repos?page=2&amp;per_page=5&gt;; rel="next", &lt;https://api.github.com/user/75067/repos?page=9&amp;per_page=5&gt;; rel="last"</span></pre></div>
+        
+      
+        
+        <p>Just will automatically parse these link headers and make them easily consumable:</p>
+
+        
+          <div class='highlight'><pre>
+gh.links[<span class="hljs-string">"next"</span>] <span class="hljs-comment">// ["rel": "next", "url":"https://api.github.com/user/75067/repos?page=2&amp;per_page=5"]</span>
+gh.links[<span class="hljs-string">"last"</span>] <span class="hljs-comment">// ["rel": "last", "url":"https://api.github.com/user/75067/repos?page=9&amp;per_page=5"]</span></pre></div>
+        
+      
+        
+        <p>(be aware of Github’s rate limits when you play with these)</p>
+
+        
+      
+        
         <h2 id="cookies">Cookies</h2>
 <p>If you expect the server to return some cookie, you can find them this way:</p>
 
