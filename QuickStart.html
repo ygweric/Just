@@ -168,6 +168,14 @@ erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if 
         
       
         
+        <p>The best way to “cancel” a request is to never send it. Once a request is
+made, however, you can express intent to cancel it like so:</p>
+
+        
+          <div class='highlight'><pre>r.cancel()</pre></div>
+        
+      
+        
         <h2 id="more-complicated-requests">More Complicated Requests</h2>
 <p>To send form values, use the <strong>data</strong> parameter:</p>
 
@@ -183,8 +191,8 @@ erronous.error      <span class="hljs-comment">// NSError from NSURLSession, if 
 
         
           <div class='highlight'><pre>
-<span class="hljs-comment">// body of this request will be in JSON</span>
-<span class="hljs-comment">// a Content-Type header will be added as application/json</span>
+<span class="hljs-comment">// body of this request will be JSON encoded.</span>
+<span class="hljs-comment">// Its Content-Type header has value 'application/json'</span>
 <span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, json:[<span class="hljs-string">"firstName"</span>:<span class="hljs-string">"Barry"</span>,<span class="hljs-string">"lastName"</span>:<span class="hljs-string">"Allen"</span>])</pre></div>
         
       
