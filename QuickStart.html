@@ -361,6 +361,40 @@ callback argument. In either cases, you can use <strong>bytesProcessed</strong>,
 
         
       
+        
+        <h2 id="customization-advanced-usage">Customization / Advanced Usage</h2>
+
+        
+      
+        
+        <p>Just is a thin layer with some default settings atop
+<a href="https://developer.apple.com/library/ios/documentation/Foundation/Reference/NSURLSession_class/">NSURLSession</a>.
+To change these settings, one must create a separate instance of Just instead of using the
+default one. Doing so opens up the oppurtunity to customize NSURLSession in
+powerful ways. A <code>JustSessionDefaults</code> can be used to provide some customization points:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">let</span> myJustDefaults = <span class="hljs-type">JustSessionDefaults</span>(
+    <span class="hljs-type">JSONReadingOptions</span>: .<span class="hljs-type">MutableContainers</span>, <span class="hljs-comment">// NSJSONSerialization reading options</span>
+    <span class="hljs-type">JSONWritingOptions</span>: .<span class="hljs-type">PrettyPrinted</span>,     <span class="hljs-comment">// NSJSONSerialization writing options</span>
+    headers:  [<span class="hljs-string">"OH"</span>:<span class="hljs-string">"MY"</span>],                  <span class="hljs-comment">// headers to include in every request</span>
+    multipartBoundary: <span class="hljs-string">"Ju5tH77P15Aw350m3"</span>, <span class="hljs-comment">// multipart post request boundaries</span>
+    credentialPersistence: .<span class="hljs-type">None</span>,           <span class="hljs-comment">// NSURLCredential persistence options</span>
+    encoding: <span class="hljs-type">NSUTF8StringEncoding</span>          <span class="hljs-comment">// en(de)coding for HTTP body</span>
+)</pre></div>
+        
+      
+        
+        <p>Just initializer accepts an <code>defaults</code> argement. Use it like this:</p>
+
+        
+          <div class='highlight'><pre>
+<span class="hljs-keyword">let</span> just = <span class="hljs-type">JustOf</span>&lt;<span class="hljs-type">HTTP</span>&gt;(defaults: myJustDefaults)
+
+just.post(<span class="hljs-string">"http://httpbin.org/post"</span>).request?.allHTTPHeaderFields?[<span class="hljs-string">"OH"</span>] ?? <span class="hljs-string">""</span> <span class="hljs-comment">// MY</span></pre></div>
+        
+      
       <div class="fleur">h</div>
     </div>
   </div>
