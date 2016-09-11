@@ -154,7 +154,7 @@ r.headers[<span class="hljs-string">"Content-Length"</span>] == r.headers[<span 
         
           <div class='highlight'><pre>
 r.request               <span class="hljs-comment">// NSURLRequest sent</span>
-r.request?.<span class="hljs-type">HTTPMethod</span>   <span class="hljs-comment">// GET</span></pre></div>
+r.request?.httpMethod   <span class="hljs-comment">// GET</span></pre></div>
         
       
         
@@ -206,7 +206,7 @@ made, however, you can express intent to cancel it like so:</p>
 <span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/redirect/2"</span>).isRedirect <span class="hljs-comment">// false</span>
 
 <span class="hljs-comment">// no redirects</span>
-<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/redirect/2"</span>, allowRedirects:<span class="hljs-built_in">false</span>).isRedirect <span class="hljs-comment">// true</span></pre></div>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/redirect/2"</span>, allowRedirects:<span class="hljs-literal">false</span>).isRedirect <span class="hljs-comment">// true</span></pre></div>
         
       
         
@@ -214,10 +214,10 @@ made, however, you can express intent to cancel it like so:</p>
 
         
           <div class='highlight'><pre><span class="hljs-comment">// permanent redirect</span>
-<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/status/301"</span>, allowRedirects:<span class="hljs-built_in">false</span>).isPermanentRedirect <span class="hljs-comment">// true</span>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/status/301"</span>, allowRedirects:<span class="hljs-literal">false</span>).isPermanentRedirect <span class="hljs-comment">// true</span>
 
 <span class="hljs-comment">// non permanent redirect</span>
-<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/status/302"</span>, allowRedirects:<span class="hljs-built_in">false</span>).isPermanentRedirect <span class="hljs-comment">// false</span></pre></div>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/status/302"</span>, allowRedirects:<span class="hljs-literal">false</span>).isPermanentRedirect <span class="hljs-comment">// false</span></pre></div>
         
       
         
@@ -226,12 +226,10 @@ made, however, you can express intent to cancel it like so:</p>
 
         
           <div class='highlight'><pre>
-<span class="hljs-keyword">import</span> <span class="hljs-type">Foundation</span>
+<span class="hljs-keyword">import</span> Foundation
 
-
-
-<span class="hljs-keyword">let</span> elonPhotoURL = <span class="hljs-type">NSBundle</span>.mainBundle().<span class="hljs-type">URLForResource</span>(<span class="hljs-string">"elon"</span>, withExtension: <span class="hljs-string">"jpg"</span>)! <span class="hljs-comment">// assume the file exist</span>
-<span class="hljs-keyword">let</span> uploadResult = <span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(elonPhotoURL, <span class="hljs-built_in">nil</span>)]) <span class="hljs-comment">// &lt;== that's it</span>
+<span class="hljs-keyword">let</span> elonPhotoURL = <span class="hljs-type">Bundle</span>.main.url(forResource: <span class="hljs-string">"elon"</span>, withExtension: <span class="hljs-string">"jpg"</span>)!
+<span class="hljs-keyword">let</span> uploadResult = <span class="hljs-type">Just</span>.post(<span class="hljs-string">"http://httpbin.org/post"</span>, files:[<span class="hljs-string">"elon"</span>: .url(elonPhotoURL, <span class="hljs-literal">nil</span>)]) <span class="hljs-comment">// &lt;== that's it</span>
 <span class="hljs-built_in">print</span>(uploadResult.text ?? <span class="hljs-string">""</span>)</pre></div>
         
       
@@ -239,16 +237,15 @@ made, however, you can express intent to cancel it like so:</p>
         <p>Here a file is specified with an NSURL. Alternatively, a file can be a NSData or just a string. Although in both cases, a filename is needed.</p>
 
         
-          <div class='highlight'><pre>
-<span class="hljs-keyword">let</span> someData = <span class="hljs-string">"Marco"</span>.dataUsingEncoding(<span class="hljs-type">NSUTF8StringEncoding</span>)! <span class="hljs-comment">// this shouldn't fail</span>
+          <div class='highlight'><pre><span class="hljs-keyword">let</span> someData = <span class="hljs-string">"Marco"</span>.data(using: <span class="hljs-type">String</span>.<span class="hljs-type">Encoding</span>.utf8)! <span class="hljs-comment">// this shouldn't fail</span>
 
 <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> text = <span class="hljs-type">Just</span>.post(
     <span class="hljs-string">"http://httpbin.org/post"</span>,
     files:[
-        <span class="hljs-string">"a"</span>:.<span class="hljs-type">Data</span>(<span class="hljs-string">"marco.text"</span>, someData, <span class="hljs-built_in">nil</span>), <span class="hljs-comment">// file #1, an NSData</span>
-        <span class="hljs-string">"b"</span>:.<span class="hljs-type">Text</span>(<span class="hljs-string">"polo.txt"</span>, <span class="hljs-string">"Polo"</span>, <span class="hljs-built_in">nil</span>)      <span class="hljs-comment">// file #2, a String</span>
+        <span class="hljs-string">"a"</span>:.data(<span class="hljs-string">"marco.text"</span>, someData, <span class="hljs-literal">nil</span>), <span class="hljs-comment">// file #1, an NSData</span>
+        <span class="hljs-string">"b"</span>:.text(<span class="hljs-string">"polo.txt"</span>, <span class="hljs-string">"Polo"</span>, <span class="hljs-literal">nil</span>)      <span class="hljs-comment">// file #2, a String</span>
     ]
-).text {
+    ).text {
     <span class="hljs-built_in">print</span>(text)
 }</pre></div>
         
@@ -263,8 +260,8 @@ made, however, you can express intent to cancel it like so:</p>
 <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> json = <span class="hljs-type">Just</span>.post(
     <span class="hljs-string">"http://httpbin.org/post"</span>,
     data:[<span class="hljs-string">"lastName"</span>:<span class="hljs-string">"Musk"</span>],
-    files:[<span class="hljs-string">"elon"</span>:.<span class="hljs-type">URL</span>(elonPhotoURL, <span class="hljs-built_in">nil</span>)]
-).json <span class="hljs-keyword">as</span>? [<span class="hljs-type">String</span>:<span class="hljs-type">AnyObject</span>] {
+    files:[<span class="hljs-string">"elon"</span>:.url(elonPhotoURL, <span class="hljs-literal">nil</span>)]
+    ).json <span class="hljs-keyword">as</span>? [<span class="hljs-type">String</span>:<span class="hljs-type">AnyObject</span>] {
     <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"form"</span>] ?? [:])      <span class="hljs-comment">// lastName:Musk</span>
     <span class="hljs-built_in">print</span>(json[<span class="hljs-string">"files"</span>] ?? [:])     <span class="hljs-comment">// elon</span>
 }</pre></div>
@@ -302,7 +299,7 @@ gh.links[<span class="hljs-string">"last"</span>] <span class="hljs-comment">// 
 
         
           <div class='highlight'><pre>
-<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/cookies/set/name/elon"</span>, allowRedirects:<span class="hljs-built_in">false</span>).cookies[<span class="hljs-string">"name"</span>] <span class="hljs-comment">// returns an NSHTTPCookie</span></pre></div>
+<span class="hljs-type">Just</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">"http://httpbin.org/cookies/set/name/elon"</span>, allowRedirects:<span class="hljs-literal">false</span>).cookies[<span class="hljs-string">"name"</span>] <span class="hljs-comment">// returns an NSHTTPCookie</span></pre></div>
         
       
         
@@ -339,16 +336,17 @@ of their uploading or downloading. You can do that by supplynig a call back
 to the parameter <strong>asyncProgressHandler</strong>.</p>
 
         
-          <div class='highlight'><pre><span class="hljs-type">Just</span>.post(
+          <div class='highlight'><pre>
+<span class="hljs-type">Just</span>.post(
     <span class="hljs-string">"http://httpbin.org/post"</span>,
-    files:[<span class="hljs-string">"large file"</span>:.<span class="hljs-type">Text</span>(<span class="hljs-string">"or"</span>, <span class="hljs-string">"pretend this is a large file"</span>, <span class="hljs-built_in">nil</span>)],
-    asyncProgressHandler: {(p) <span class="hljs-keyword">in</span>
+    files:[<span class="hljs-string">"large file"</span>:.text(<span class="hljs-string">"or"</span>, <span class="hljs-string">"pretend this is a large file"</span>, <span class="hljs-literal">nil</span>)],
+    asyncProgressHandler: { p <span class="hljs-keyword">in</span>
         p.type <span class="hljs-comment">// either .Upload or .Download</span>
         p.bytesProcessed
         p.bytesExpectedToProcess
         p.percent
     }
-) { (r) <span class="hljs-keyword">in</span>
+) { r <span class="hljs-keyword">in</span>
     <span class="hljs-comment">// finished</span>
 }</pre></div>
         
@@ -374,14 +372,15 @@ default one. Doing so opens up the oppurtunity to customize NSURLSession in
 powerful ways. A <code>JustSessionDefaults</code> can be used to provide some customization points:</p>
 
         
-          <div class='highlight'><pre>
+          <div class='highlight'><pre><span class="hljs-comment">//</span>
+
 <span class="hljs-keyword">let</span> myJustDefaults = <span class="hljs-type">JustSessionDefaults</span>(
-    <span class="hljs-type">JSONReadingOptions</span>: .<span class="hljs-type">MutableContainers</span>, <span class="hljs-comment">// NSJSONSerialization reading options</span>
-    <span class="hljs-type">JSONWritingOptions</span>: .<span class="hljs-type">PrettyPrinted</span>,     <span class="hljs-comment">// NSJSONSerialization writing options</span>
+    <span class="hljs-type">JSONReadingOptions</span>: .mutableContainers, <span class="hljs-comment">// NSJSONSerialization reading options</span>
+    <span class="hljs-type">JSONWritingOptions</span>: .prettyPrinted,     <span class="hljs-comment">// NSJSONSerialization writing options</span>
     headers:  [<span class="hljs-string">"OH"</span>:<span class="hljs-string">"MY"</span>],                  <span class="hljs-comment">// headers to include in every request</span>
     multipartBoundary: <span class="hljs-string">"Ju5tH77P15Aw350m3"</span>, <span class="hljs-comment">// multipart post request boundaries</span>
-    credentialPersistence: .<span class="hljs-type">None</span>,           <span class="hljs-comment">// NSURLCredential persistence options</span>
-    encoding: <span class="hljs-type">NSUTF8StringEncoding</span>          <span class="hljs-comment">// en(de)coding for HTTP body</span>
+    credentialPersistence: .<span class="hljs-keyword">none</span>,           <span class="hljs-comment">// NSURLCredential persistence options</span>
+    encoding: <span class="hljs-type">String</span>.<span class="hljs-type">Encoding</span>.utf8          <span class="hljs-comment">// en(de)coding for HTTP body</span>
 )</pre></div>
         
       
