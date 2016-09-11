@@ -8,12 +8,12 @@
 
 Just is a client-side HTTP library inspired by [python-requests][] - HTTP for Humans.
 
-Just suppports Swift 2 and 3. For Swift 3 support, use the `swift3`
-[branch][swift3].
+Just suppports Swift 3 and 2.3. For Swift 2.3 support, use the `swift-2.3`
+[branch][swift2].
 
 *Follow [@JustHTTP][twitter] for updates, if you are into that kind of things* 😉
 
-[swift3]: https://github.com/JustHTTP/Just/tree/swift3
+[swift2]: https://github.com/JustHTTP/Just/tree/swift-2.3
 [python-requests]: http://python-requests.org "python-requests"
 [twitter]: https://twitter.com/JustHTTP
 #   Features
@@ -79,7 +79,7 @@ Read *Getting Started* [on the web][starting link] or
 
 Here are some ways to leverage Just.
 
-## Carthage (recommended)
+## Carthage (only Swift 3 is supported)
 
 Include the following in your Cartfile:
 
@@ -95,7 +95,7 @@ The usual way:
     use_frameworks!
 
     target 'MyApp' do
-      pod 'Just'
+      pod 'Just', :git => 'https://github.com/JustHTTP/Just.git', :branch => 'swift-2.3'
     end
 
 ## Manual
