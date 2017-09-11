@@ -1012,7 +1012,8 @@ public final class HTTP: NSObject, URLSessionDelegate, JustAdaptor {
     }
 
     if isSynchronous {
-      let timeout = timeout.flatMap { DispatchTime.now() + $0 }
+      let additionalTimeForURLRequestTimeout: Double = 10
+      let timeout = timeout.flatMap { DispatchTime.now() + $0 + additionalTimeForURLRequestTimeout}
         ?? DispatchTime.distantFuture
       _ = semaphore.wait(timeout: timeout)
       return requestResult
