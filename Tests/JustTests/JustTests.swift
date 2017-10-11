@@ -702,6 +702,22 @@ final class Timeout: XCTestCase {
   func testShouldNotTimeoutWhenResponseComesInSooner() {
     XCTAssertTrue(Just.get("http://httpbin.org/", timeout: 2).ok)
   }
+    
+    func testShouldNotTimeoutWhenResponseComesInSoonerx() {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: HTTPResult?
+        let begin = Date().timeIntervalSince1970
+        
+        Just.get("http://httpbin.org/delay/10", timeout: 0.2) { (result_) in
+            print("\n\n\n========>> interval: \(Date().timeIntervalSince1970 - begin) \n\n\n")
+            result = result_
+            semaphore.signal()
+        }
+        semaphore.wait()
+        
+        print("Error: \(result!.error?.localizedDescription ?? "")")
+        XCTAssertEqual(result!.error?.localizedDescription ?? "", "The request timed out.")
+    }
 }
 
 

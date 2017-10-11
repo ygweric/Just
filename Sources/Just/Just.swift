@@ -808,6 +808,9 @@ public final class HTTP: NSObject, URLSessionDelegate, JustAdaptor {
   func makeTask(_ request: URLRequest, configuration: TaskConfiguration)
     -> URLSessionDataTask?
   {
+//    session.configuration.timeoutIntervalForRequest = request.timeoutInterval
+//    session.configuration.timeoutIntervalForResource = request.timeoutInterval
+    
     let task = session.dataTask(with: request)
     taskConfigs[task.taskIdentifier] = configuration
     return task
@@ -933,11 +936,19 @@ public final class HTTP: NSObject, URLSessionDelegate, JustAdaptor {
       }
       if let URL = urlComponents.url {
         var request = URLRequest(url: URL)
+        withUnsafePointer(to: &request) {
+            print(">>>>>>> request 0 init: \($0)")
+        }
         request.cachePolicy = defaults.cachePolicy
         request.httpBody = body
         request.httpMethod = method.rawValue
         if let requestTimeout = timeout {
           request.timeoutInterval = requestTimeout
+            print(">>>>>>> setup timeout: \(request.timeoutInterval)")
+            withUnsafePointer(to: &request) {
+                print(">>>>>>> request 1 set timeout: \($0)")
+            }
+
         }
 
         for (k, v) in defaults.headers {
@@ -947,7 +958,15 @@ public final class HTTP: NSObject, URLSessionDelegate, JustAdaptor {
         for (k, v) in finalHeaders {
           request.addValue(v, forHTTPHeaderField: k)
         }
-        return request as URLRequest
+        
+        withUnsafePointer(to: &request) {
+            print(">>>>>>> request 7 before force cast: \($0)")
+        }
+        var request_ = request as URLRequest
+        withUnsafePointer(to: &request_) {
+            print(">>>>>>> request 7 after force cast: \($0)")
+        }
+        return request_
       }
 
     }
@@ -978,10 +997,16 @@ public final class HTTP: NSObject, URLSessionDelegate, JustAdaptor {
 
     let caseInsensitiveHeaders = CaseInsensitiveDictionary<String, String>(
       dictionary: headers)
-    guard let request = synthesizeRequest(method, url: url,
-      params: params, data: data, json: json, headers: caseInsensitiveHeaders,
-      files: files, auth: auth, timeout: timeout, urlQuery: urlQuery,
-      requestBody: requestBody) else
+    var request_ = synthesizeRequest(method, url: url,
+                                    params: params, data: data, json: json, headers: caseInsensitiveHeaders,
+                                    files: files, auth: auth, timeout: timeout, urlQuery: urlQuery,
+                                    requestBody: requestBody)
+    
+    withUnsafePointer(to: &request_) {
+        print(">>>>>>> request 4 after synthesizeRequest: \($0)")
+    }
+    
+    guard request_ != nil else
     {
       let erronousResult = HTTPResult(data: nil, response: nil,
         error: invalidURLError, task: nil)
@@ -990,7 +1015,11 @@ public final class HTTP: NSObject, URLSessionDelegate, JustAdaptor {
       }
       return erronousResult
     }
+    var request = request_!
     addCookies(request.url!, newCookies: cookies)
+    print(">>>>>>>>>########### begin, Thread.current: \(Thread.current)")
+    let beginTime: Double = Date().timeIntervalSince1970
+    print(">>>>>>>>> beginTime: \(beginTime)")
     let config = TaskConfiguration(
       credential: auth,
       redirects: redirects,
@@ -998,25 +1027,49 @@ public final class HTTP: NSObject, URLSessionDelegate, JustAdaptor {
       data: Data(),
       progressHandler: asyncProgressHandler)
     { result in
-      if let handler = asyncCompletionHandler {
-        handler(result)
-      }
+//        print(">>>>>>>>> got result: \(Date().timeIntervalSince1970), Thread.current: \(Thread.current)")
+        print(">>>>>>>>> got result: \(Date().timeIntervalSince1970), result: \(result)")
+        
       if isSynchronous {
         requestResult = result
         semaphore.signal()
       }
+        if let handler = asyncCompletionHandler {
+            handler(result)
+        }
     }
 
     if let task = makeTask(request, configuration: config) {
+      print(">>>>>>>>> resume task: \(Date().timeIntervalSince1970)")
+        withUnsafePointer(to: &request) {
+            print(">>>>>>> request 3 resume task: \($0)")
+        }
       task.resume()
     }
 
     if isSynchronous {
-      let timeout = timeout.flatMap { DispatchTime.now() + $0 }
+//        print(">>>>>>>>> request.timeoutInterval : \(request.timeoutInterval)")
+        let timeout = timeout.flatMap { DispatchTime.now() + $0 }
         ?? DispatchTime.distantFuture
-      _ = semaphore.wait(timeout: timeout)
+        let timeIntervalBetweenThread: Double = 2.0
+        let realTimeOut = timeout + timeIntervalBetweenThread
+        print(">>>>>>>>> begin waiting: \(Date().timeIntervalSince1970), Thread.current: \(Thread.current)")
+      _ = semaphore.wait(timeout: realTimeOut)
+        print(">>>>>>>>> finish waiting: \(Date().timeIntervalSince1970), Thread.current: \(Thread.current)")
+        
+        if requestResult.error != nil && syncResultAccessError.isEqual(requestResult.error!)  {
+            
+            withUnsafePointer(to: &request) {
+                print(">>>>>>> request 2: \($0)")
+            }
+            fatalError()
+            
+//            print("Error here")
+        }
+        print(">>>>>>>>>########### End 1")
       return requestResult
     }
+    print(">>>>>>>>>########### End 2")
     return requestResult
   }
 
